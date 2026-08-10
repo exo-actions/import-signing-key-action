@@ -1,0 +1,68 @@
+# https://help.github.com/en/articles/metadata-syntax-for-github-actions
+name: 'Import signing key'
+description: 'GitHub Action to easily import a GPG or SSH signing key'
+author: 'exoplatform'
+branding:
+  color: 'yellow'
+  icon: 'lock'
+
+inputs:
+  signing_key:
+    description: 'GPG private key (ASCII armored or base64 encoded) or SSH private key (OpenSSH/PEM format) used to sign commits and tags'
+    required: true
+  passphrase:
+    description: 'Passphrase of the private key'
+    required: false
+  trust_level:
+    description: "Set key's trust level (GPG only)"
+    required: false
+  git_config_global:
+    description: 'Set Git config global'
+    default: 'false'
+    required: false
+  git_user_signingkey:
+    description: 'Set signing keyID for this Git repository'
+    default: 'false'
+    required: false
+  git_commit_gpgsign:
+    description: 'Sign all commits automatically'
+    default: 'false'
+    required: false
+  git_tag_gpgsign:
+    description: 'Sign all tags automatically'
+    default: 'false'
+    required: false
+  git_push_gpgsign:
+    description: 'Sign all pushes automatically'
+    default: 'if-asked'
+    required: false
+  git_committer_name:
+    description: 'Commit author''s name'
+    required: false
+  git_committer_email:
+    description: 'Commit author''s email. Also used to build the SSH allowed_signers file when signing_key is an SSH key'
+    required: false
+  workdir:
+    description: 'Working directory (below repository root)'
+    default: '.'
+    required: false
+  fingerprint:
+    description: 'Specific fingerprint to use (GPG subkey only)'
+    required: false
+
+outputs:
+  format:
+    description: 'Detected format of the signing key (openpgp or ssh)'
+  fingerprint:
+    description: 'Fingerprint of the key (recommended as user ID)'
+  keyid:
+    description: 'Low 64 bits of the X.509 certificate SHA-1 fingerprint (GPG only)'
+  name:
+    description: 'Name associated with the key'
+  email:
+    description: 'Email address associated with the key'
+
+runs:
+  using: 'node24'
+  main: 'dist/index.cjs'
+  post: 'dist/index.cjs'
