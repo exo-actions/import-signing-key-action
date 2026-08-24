@@ -1,0 +1,61 @@
+name: release
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  validate-dist:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      -
+        name: Validate dist is up to date
+        uses: docker/bake-action@d3418bd7d0e9324001bca92fa8ba175ea7e6dc9b # v7.3.0
+        with:
+          source: .
+          targets: build-validate
+
+  release:
+    runs-on: ubuntu-latest
+    needs:
+      - validate-dist
+    permissions:
+      contents: write # to create the release and move the v1 branch
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      -
+        name: Ensure v1 branch matches this release
+        run: |
+          git fetch origin v1
+          if [ "$(git rev-parse origin/v1)" = "$GITHUB_SHA" ]; then
+            echo "v1 already points at $GITHUB_SHA"
+          elif git merge-base --is-ancestor origin/v1 "$GITHUB_SHA"; then
+            echo "Fast-forwarding v1 to $GITHUB_SHA"
+            git push origin "$GITHUB_SHA:refs/heads/v1"
+          else
+            echo "::error::Tag $GITHUB_REF_NAME (commit $GITHUB_SHA) is not a descendant of the v1 branch (origin/v1=$(git rev-parse origin/v1)). Refusing to move v1 backward or diverge it; the bundle it points to would then be stale for @v1 consumers."
+            exit 1
+          fi
+      -
+        name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes

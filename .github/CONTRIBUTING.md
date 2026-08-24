@@ -25,6 +25,22 @@ Here are a few things you can do that will increase the likelihood of your pull 
 - Keep your change as focused as possible. If there are multiple changes you would like to make that are not dependent upon each other, consider submitting them as **separate pull requests**.
 - Write a [good commit message](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html).
 
+## Releasing
+
+Once `v1` has the changes you want to ship (with `dist/` up to date — see step 6
+above), cut a release by pushing a version tag from that commit:
+
+```shell
+git checkout v1 && git pull
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+The [`release`](workflows/release.yml) workflow then verifies `dist/` matches
+the tagged source, fast-forwards the `v1` branch to that commit if needed (so
+`@v1` consumers always get the released bundle), and publishes the GitHub
+Release automatically.
+
 ## Resources
 
 - [How to Contribute to Open Source](https://opensource.guide/how-to-contribute/)
