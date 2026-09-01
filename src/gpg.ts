@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as fsPromises from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
 import * as exec from '@actions/exec';
@@ -204,9 +205,7 @@ export const getKeygrip = async (fingerprint: string): Promise<string> => {
 
 export const configureAgent = async (homedir: string, config: string): Promise<void> => {
   const gpgAgentConf = path.join(homedir, 'gpg-agent.conf');
-  await fs.writeFile(gpgAgentConf, config, function (err) {
-    if (err) throw err;
-  });
+  await fsPromises.writeFile(gpgAgentConf, config);
   await gpgConnectAgent('RELOADAGENT');
 };
 
